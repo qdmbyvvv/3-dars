@@ -11,18 +11,18 @@ import {
 export class User {
   @PrimaryGeneratedColumn()
   id!: number;
-  @Column({nullable:false})
+  @Column({ nullable: false, default: "unknown" })
   declare username: string;
 
-  @Column()
+  @Column({ default: "defaultpassword" })
   declare password: string;
 
-  @Column()
+  @Column({ default: "defaultemail" })
   declare email: string;
 
   @Column({ type: "varchar", default: null })
   declare otp: string | null;
-  @Column({  default: UserRole.USER })
+  @Column({ default: UserRole.USER })
   declare role: UserRole;
   @Column({ type: "boolean", default: false, nullable: true })
   declare isverify: boolean;

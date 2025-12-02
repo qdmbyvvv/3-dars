@@ -11,6 +11,7 @@ import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { time } from "console";
+import { UserRole } from "src/common/constants/role-constants";
 @Injectable()
 export class AuthService {
   private transporter = nodemailer.createTransport({
@@ -33,7 +34,6 @@ export class AuthService {
     if (foundeuser) {
       throw new UnauthorizedException("user already exsists");
     }
-    console.log(foundeuser);
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -50,55 +50,62 @@ export class AuthService {
       email,
       password: hash,
       otp: randomNumber,
-      otpTime:time,
+      otpTime: time,
     });
     return this.userRepo.save(newUser);
   }
-  // async verify(verifyDto: VerifyDto): Promise<{ message: string }> {
-  //   const { email, otp } = verifyDto;
+  async verify(verifyDto: VerifyDto): Promise<{ message: string }> {
+    const { email, otp } = verifyDto;
 
-  //   const foundeuser = await this.userModel.findOne({ where: { email } });
+    const foundeuser = await this.userRepo.findOne({ where: { email } });
 
-  //   if (!foundeuser) {
-  //     throw new UnauthorizedException("user not found");
-  //   }
-  //   const currentTime = Date.now();
-  //   const expireTime = Number(foundeuser.dataValues.otpTime);
+    if (!foundeuser) {
+      throw new UnauthorizedException("user not found");
+    }
+    const currentTime = Date.now();
+    const expireTime = Number(foundeuser.otpTime);
 
-  //   if (currentTime > expireTime) {
-  //     throw new BadRequestException("Otp time expired");
-  //   }
-  //   if (Number(foundeuser.dataValues.otp) !== Number(otp)) {
-  //     throw new BadRequestException("Wrong otp");
-  //   }
-  //   await this.userModel.update(
-  //     { otp: null, otpTime: null, isverify: true },
-  //     { where: { email } }
-  //   );
-  //   return { message: "verify " };
-  // }
-  // async login(loginDto: LoginDto): Promise<{ access_token: string }> {
-  //   const { password, email } = loginDto;
+    if (currentTime > expireTime) {
+      throw new BadRequestException("Otp time expired");
+    }
+    if (Number(foundeuser.otp) !== Number(otp)) {
+      throw new BadRequestException("Wrong otp");
+    }
+    await this.userRepo.update(foundeuser.id, { otp :"0",otpTime:0,isverify:true} );
+    return { message: "verify " };
+  }
+  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+    const { password, email } = loginDto;
 
-  //   const foundeuser = await this.userModel.findOne({ where: { email } });
+    const foundeuser = await this.userRepo.findOne({ where: { email } });
 
-  //   if (!foundeuser) {
-  //     throw new UnauthorizedException("user not found");
-  //   }
-  //   const decode = await bcrypt.compare(
-  //     password,
-  //     foundeuser.dataValues.password
-  //   );
-  //   if (decode && foundeuser.dataValues.isverify) {
-  //     const payload = {
-  //       sub: foundeuser.dataValues.id,
-  //       username: foundeuser.dataValues.username,
-  //     };
-  //     return {
-  //       access_token: await this.jwtService.signAsync(payload),
-  //     };
-  //   } else {
-  //     throw new BadRequestException("Invalid password");
-  //   }
-  // }
+    if (!foundeuser) {
+      throw new UnauthorizedException("user not found");
+    }
+    const decode = await bcrypt.compare(
+      password,
+      foundeuser.password
+    );
+    if (decode && foundeuser.isverify) {
+      const payload = {
+        sub: foundeuser.id,
+        username: foundeuser.username,
+        UserRole:foundeuser.role
+      };
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+      };
+    } else {
+      throw new BadRequestException("Invalid password");
+    }
+  }
+  async deleteUser(id: number):Promise<boolean> {
+    const foundeuser = await this.userRepo.findOne({ where: { id } });
+
+    if (!foundeuser) {
+      throw new UnauthorizedException("user nit found");
+    }
+    await this.userRepo.delete({id})
+    return true
+  }
 }
