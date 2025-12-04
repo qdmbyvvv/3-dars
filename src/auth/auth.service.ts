@@ -3,15 +3,15 @@ import {
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import { User } from "./entities/user.entity";
-import { CreateUserdto, LoginDto, VerifyDto } from "./dto/create-user.dto";
+import { User } from "./entities/user-entity";
+import { CreateUserDto, LoginDto, VerifyDto } from "./dto/create.user-dto";
 import * as bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { time } from "console";
 import { UserRole } from "src/common/constants/role-constants";
+
 @Injectable()
 export class AuthService {
   private transporter = nodemailer.createTransport({
@@ -26,7 +26,7 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async register(createUserDto: CreateUserdto): Promise<User> {
+  async register(createUserDto: CreateUserDto): Promise<User> {
     const { username, password, email } = createUserDto;
 
     const foundeuser = await this.userRepo.findOne({ where: { email } });

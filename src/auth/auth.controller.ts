@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, HttpCode, Param, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateUserdto, LoginDto, VerifyDto } from "./dto/create-user.dto";
-import { User } from "./entities/user.entity";
+import { CreateUserDto, LoginDto, VerifyDto } from "./dto/create.user-dto";
+import { User } from "./entities/user-entity";
 
 @Controller("auth")
 export class AuthController {
@@ -9,9 +9,9 @@ export class AuthController {
 
   @HttpCode(201)
   @Post("register")
-  register(@Body() CreateUserdto: CreateUserdto): Promise<User> {
-    return this.authService.register(CreateUserdto);
-  }
+  register(@Body() createUserDto: CreateUserDto): Promise<User> {
+  return this.authService.register(createUserDto);
+}
   @HttpCode(200)
   @Post("verify")
   verify(@Body() verifyDto: VerifyDto): Promise<{ message: string }> {
@@ -22,10 +22,10 @@ export class AuthController {
   login(@Body() loginDto: LoginDto): Promise<{ access_token: string }> {
     return this.authService.login(loginDto);
   }
- @HttpCode(201)
- @Delete("delete/:id")
-  @Post("register")
-  delete(@Param("id") id : string) {
-    return this.authService.deleteUser(+id)
-  }
+@HttpCode(200)
+@Delete("delete/:id")
+delete(@Param("id") id: string) {
+  return this.authService.deleteUser(+id);
+}
+
 }
